@@ -35,26 +35,28 @@ public class Gem : MonoBehaviour, IDropEvent {
         {
             hashFlowers = new Dictionary<string, int>();
         }
+
+        string name = GetComponent<SpriteRenderer>().sprite.ToString();
+        if (!hashFlowers.ContainsKey(name))
+        {
+            hashFlowers[name] = hashFlowers.Count;
+        }
+        m_type = hashFlowers[name];
+        //GoToAssigned();
     }
 
     public void HandleDrop(float x, float y)
     {
         //Debug.Log("gh1 " + x.ToString() + " " + y.ToString());
-        if( Mathf.Abs(assignedPos.x - x) < 1e-6f && assignedPos.y > y)
+        if( Mathf.Abs(assignedPos.x - x) < 1e-6f && assignedPos.y > y-0.5f)
         {
-            assignedPos.y -= 1.0f;
+            trialPos.y -= 1.0f;
         }
-        GoToAssigned();
     }
 
     // Use this for initialization
     void Start () {
-        string name = GetComponent<SpriteRenderer>().sprite.ToString();
-        if(!hashFlowers.ContainsKey(name))
-        {
-            hashFlowers[name] = hashFlowers.Count;
-        }
-        m_type = hashFlowers[name];
+        GoToAssigned();
     }
 
     // Update is called once per frame
@@ -68,10 +70,11 @@ public class Gem : MonoBehaviour, IDropEvent {
     public int GetMatchCount() { return matchCount; }
     public void SetMatchCount(int x) { matchCount = x; }
 
-    private void GoToAssigned()
+    public void GoToAssigned()
     {
         GetComponent<TargetJoint2D>().target = assignedPos;
         GetComponent<DistanceJoint2D>().connectedAnchor = assignedPos;
+        trialPos = assignedPos;
     }
 
     public void AcceptMove()
@@ -91,6 +94,7 @@ public class Gem : MonoBehaviour, IDropEvent {
     public void UndoMove()
     {
         assignedPos = lastPos;
+        trialPos = assignedPos;
         GoToAssigned();
     }
 
@@ -120,7 +124,10 @@ public class Gem : MonoBehaviour, IDropEvent {
         trialPos = other.GetComponent<Gem>().assignedPos;
         if( ((trialPos - assignedPos).sqrMagnitude - 1.0f) > 0.1 ) { return; }
 
-        if(!ValidMove()) { return; }
+        if(!ValidMove()) {
+            UndoMove();
+            return;
+        }
 
         AcceptMove();
         other.GetComponent<Gem>().MoveTo(lastPos);

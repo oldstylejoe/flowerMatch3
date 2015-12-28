@@ -30,7 +30,8 @@ public class pairInt
     public pairInt(pairInt a) { x = a.x; y = a.y; }
 }
 
-public class Grid : MonoBehaviour, ICustomEvents {
+public class Grid : MonoBehaviour, ICustomEvents
+{
 
     //Game size
     public static int w = 8;
@@ -40,6 +41,8 @@ public class Grid : MonoBehaviour, ICustomEvents {
     private int[] m_lowestDrop;
 
     public float m_clueDelay = 4.0f;
+
+    public scoreHandler m_scr;
 
     public GameObject m_finger;
     private GameObject m_held;
@@ -60,6 +63,8 @@ public class Grid : MonoBehaviour, ICustomEvents {
     private float m_flashTime = 0.0f;
 
     private GameObject m_gameBoard;
+
+    public GameObject scoreAnim;
 
     void Awake()
     {
@@ -114,7 +119,8 @@ public class Grid : MonoBehaviour, ICustomEvents {
     }
 
     // Use this for initialization
-    void Start() {
+    void Start()
+    {
         setupBoard();
         Swap();
         Input.simulateMouseWithTouches = true;
@@ -145,7 +151,8 @@ public class Grid : MonoBehaviour, ICustomEvents {
         //remove the old one
         m_current.RemoveAt(id);
         Destroy(f);
-        foreach (var ff in m_current) {
+        foreach (var ff in m_current)
+        {
             ExecuteEvents.Execute<IDropEvent>(ff, null, (a, b) => a.HandleDrop(x, y));
         }
         //Debug.Log("gh2 " + x.ToString() + " " + y.ToString());
@@ -187,42 +194,68 @@ public class Grid : MonoBehaviour, ICustomEvents {
         Debug.Log("No more moves");
     }
 
+    private bool m_destroyingTriples = false;
     private IEnumerator DestroyTriples()
     {
-        //only one at a time
-        ExecuteEvents.Execute<ICustomEvents>(gameObject, null, (a, b) => a.DropStarted());
-
-        int rmCount = -1;
-        do
+        if (!m_destroyingTriples)
         {
-            flowerDropRefCount = 0;
-            for (int i = 0; i < w; ++i) { m_numAddedAtX[i] = 0; }
-            markClusters();
+            m_destroyingTriples = false;
 
-            List<int> idToRemove = new List<int>();
-            for (int i = 0; i < w; ++i)
+            //only one at a time
+            ExecuteEvents.Execute<ICustomEvents>(gameObject, null, (a, b) => a.DropStarted());
+
+            int rmCount = -1;
+            int multiplier = 1;
+            do
             {
-                for (int j = 0; j < h; ++j)
+                flowerDropRefCount = 0;
+                for (int i = 0; i < w; ++i) { m_numAddedAtX[i] = 0; }
+                markClusters();
+
+                List<int> idToRemove = new List<int>();
+                for (int i = 0; i < w; ++i)
                 {
-                    if (m_grid[i, j].sizeX > 2 || m_grid[i, j].sizeY > 2)
+                    for (int j = 0; j < h; ++j)
                     {
-                        idToRemove.Add(m_grid[i, j].id);
+                        if (m_grid[i, j].sizeX > 2 || m_grid[i, j].sizeY > 2)
+                        {
+                            idToRemove.Add(m_grid[i, j].id);
+                        }
                     }
                 }
-            }
 
-            rmCount = idToRemove.Count;
-            var rm = idToRemove.OrderByDescending(x => x);
-            foreach (int i in rm)
-            {
-                StartCoroutine(ReplaceFlower(i));
-            }
-            yield return new WaitUntil(() => flowerDropRefCount == 0);
+                rmCount = idToRemove.Count;
+                var rm = idToRemove.OrderByDescending(x => x);
+                foreach (int i in rm)
+                {
+                    m_scr.IncrementScore(multiplier * m_current[i].GetComponent<Gem>().GetMatchCount());
+                    var pos = m_current[i].transform.position;
+                    pos.z = -1.0f;
+                    var clone = Instantiate(scoreAnim, pos, m_current[i].transform.rotation);
+                    //var clone = Instantiate(scoreAnim, new Vector3(0,8), m_current[i].transform.rotation);
+                    ((GameObject)clone).GetComponent<TextMesh>().text = (multiplier * m_current[i].GetComponent<Gem>().GetMatchCount()).ToString();
+                    var tVel = Random.insideUnitCircle;
+                    tVel.y = Mathf.Abs(tVel.y);
+                    ((GameObject)clone).GetComponent<Rigidbody2D>().velocity = tVel;
+                    StartCoroutine(ReplaceFlower(i));
+                }
+                yield return new WaitUntil(() => flowerDropRefCount == 0);
 
-            yield return new WaitForSeconds(0.1f);
-        } while (rmCount > 0);
+                foreach (var f in m_current)
+                {
+                    f.GetComponent<Gem>().AcceptMove();
+                }
 
-        ExecuteEvents.Execute<ICustomEvents>(gameObject, null, (a, b) => a.DropComplete());
+                yield return new WaitForSeconds(0.2f);
+
+                multiplier *= 2;
+
+            } while (rmCount > 0);
+
+            ExecuteEvents.Execute<ICustomEvents>(gameObject, null, (a, b) => a.DropComplete());
+
+            m_destroyingTriples = false;
+        }
 
         yield return null;
 
@@ -254,7 +287,8 @@ public class Grid : MonoBehaviour, ICustomEvents {
     }
 
     // Update is called once per frame
-    void Update() {
+    void Update()
+    {
         if (m_grabEnabled && Input.GetMouseButtonDown(0))
         {
             Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -284,9 +318,9 @@ public class Grid : MonoBehaviour, ICustomEvents {
         }
 
         //jiggle one for a clue after a while
-        if(Time.time > m_flashTime && m_movableFlowers.Count > 0)
+        if (Time.time > m_flashTime && m_movableFlowers.Count > 0)
         {
-            if(m_hintID < 0)
+            if (m_hintID < 0)
             {
                 m_hintID = Random.Range(0, m_movableFlowers.Count);
             }
@@ -314,6 +348,13 @@ public class Grid : MonoBehaviour, ICustomEvents {
                 Vector3 pos = new Vector3(i, j, 0);
                 AddFlower(pos);
             }
+        }
+
+        markClusters();
+        while (AtLeastOneTriple())
+        {
+            ReassignTriples();
+            markClusters();
         }
     }
 
@@ -411,7 +452,7 @@ public class Grid : MonoBehaviour, ICustomEvents {
                 m_current[m_grid[i, j].id].GetComponent<Gem>().canMoveDown = false;
             }
         }
-                for (int i = 0; i < w; ++i)
+        for (int i = 0; i < w; ++i)
         {
             for (int j = 0; j < h; ++j)
             {
@@ -464,6 +505,47 @@ public class Grid : MonoBehaviour, ICustomEvents {
                     catch (System.IndexOutOfRangeException) { }
                 }
             }
+        }
+    }
+
+    private bool AtLeastOneTriple()
+    {
+        for (int i = 0; i < w; ++i)
+        {
+            for (int j = 0; j < h; ++j)
+            {
+                if (m_grid[i, j].sizeX > 2 || m_grid[i, j].sizeY > 2)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    //reset the ones marked as triples. Meant to be called at initial setup (no animation or scoring).
+    private void ReassignTriples()
+    {
+
+        List<int> toRemove = new List<int>();
+
+        for (int i = 0; i < w; ++i)
+        {
+            for (int j = 0; j < h; ++j)
+            {
+                if (m_grid[i, j].sizeX > 2 || m_grid[i, j].sizeY > 2)
+                {
+                    toRemove.Add(m_grid[i, j].id);
+                    AddFlower(new Vector3(i, j, 0));
+                }
+            }
+        }
+        var rm = toRemove.OrderByDescending(x => x);
+        foreach (int i in rm)
+        {
+            var q = m_current[i];
+            m_current.RemoveAt(i);
+            Destroy(q);
         }
     }
 }
