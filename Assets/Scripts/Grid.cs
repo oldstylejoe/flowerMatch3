@@ -50,6 +50,8 @@ public class Grid : MonoBehaviour, ICustomEvents
     private bool m_grabEnabled = true;
     private int m_hintID = -1;
 
+    public GameObject m_bouquet;
+
     public List<GameObject> m_flowers = new List<GameObject>();
 
     private List<GameObject> m_current = new List<GameObject>();
@@ -124,6 +126,13 @@ public class Grid : MonoBehaviour, ICustomEvents
         setupBoard();
         Swap();
         Input.simulateMouseWithTouches = true;
+    }
+
+    private void setupBouquet()
+    {
+        foreach(var f in m_flowers) {
+            m_bouquet.GetComponent<BouqetHolder>().AddFlower(f.GetComponent<SpriteRenderer>().color);
+        }
     }
 
     //Replace a flower, id is the element in m_current that points to the flower to be removed.
@@ -213,6 +222,7 @@ public class Grid : MonoBehaviour, ICustomEvents
                 markClusters();
 
                 List<int> idToRemove = new List<int>();
+                Dictionary<int, int> hit = new Dictionary<int, int>();
                 for (int i = 0; i < w; ++i)
                 {
                     for (int j = 0; j < h; ++j)
@@ -220,6 +230,9 @@ public class Grid : MonoBehaviour, ICustomEvents
                         if (m_grid[i, j].sizeX > 2 || m_grid[i, j].sizeY > 2)
                         {
                             idToRemove.Add(m_grid[i, j].id);
+                            hit[m_grid[i, j].type] = 0;
+                            hit[m_grid[i, j].type] = Mathf.Max(hit[m_grid[i, j].type], m_grid[i, j].sizeX);
+                            hit[m_grid[i, j].type] = Mathf.Max(hit[m_grid[i, j].type], m_grid[i, j].sizeY);
                         }
                     }
                 }
@@ -247,6 +260,15 @@ public class Grid : MonoBehaviour, ICustomEvents
                 }
 
                 yield return new WaitForSeconds(0.2f);
+
+                var flowers = m_bouquet.GetComponent<BouqetHolder>();
+                foreach(var fl in hit)
+                {
+                    for (int i = 0; i < fl.Value-2; ++i) {
+                        yield return StartCoroutine(flowers.Increment(fl.Key));
+                    }
+                }
+                //yield return StartCoroutine(  );
 
                 multiplier *= 2;
 
@@ -356,6 +378,8 @@ public class Grid : MonoBehaviour, ICustomEvents
             ReassignTriples();
             markClusters();
         }
+
+        setupBouquet();
     }
 
 
