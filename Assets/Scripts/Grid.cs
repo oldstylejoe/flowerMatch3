@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +44,7 @@ public class Grid : MonoBehaviour, ICustomEvents
     public float m_clueDelay = 4.0f;
 
     public scoreHandler m_scr;
+    public GameOverHandler m_gameOver;
 
     public GameObject m_finger;
     private GameObject m_held;
@@ -72,7 +74,7 @@ public class Grid : MonoBehaviour, ICustomEvents
     {
         long fTest;
         Clock.GetSystemTimePreciseAsFileTime(out fTest);
-        Debug.Log("start time " + fTest);
+        //Debug.Log("start time " + fTest);
         Clock.write("start_time " + fTest);
 
         m_flashTime = Time.time + 1e6f;
@@ -126,6 +128,8 @@ public class Grid : MonoBehaviour, ICustomEvents
         setupBoard();
         Swap();
         Input.simulateMouseWithTouches = true;
+
+        m_gameOver.GameStart();
     }
 
     private void setupBouquet()
@@ -179,6 +183,7 @@ public class Grid : MonoBehaviour, ICustomEvents
 
     public void DropStarted()
     {
+        //m_gameOver.GameOver();  //testing only
         m_grabEnabled = false;
     }
     public void DropComplete()
@@ -200,7 +205,14 @@ public class Grid : MonoBehaviour, ICustomEvents
 
     public void NoMoves()
     {
-        Debug.Log("No more moves");
+        m_gameOver.GameOver();
+        //Debug.Log("No more moves");
+    }
+
+    public void RestartButton()
+    {
+        //Application.LoadLevel(Application.loadedLevel);
+        SceneManager.LoadScene("playScene2");
     }
 
     private bool m_destroyingTriples = false;
@@ -314,6 +326,7 @@ public class Grid : MonoBehaviour, ICustomEvents
         if (m_grabEnabled && Input.GetMouseButtonDown(0))
         {
             Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Clock.markEvent("fingerDown_" + pos.x + "_" + pos.y);
             //attach the finger to the object
             int count = 0;
             foreach (var f in m_current)
@@ -330,12 +343,15 @@ public class Grid : MonoBehaviour, ICustomEvents
 
         if (Input.GetMouseButtonUp(0))
         {
+            Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Clock.markEvent("fingerLifted_" + pos.x + "_" + pos.y);
             DropFlower();
         }
 
         if (Input.GetMouseButton(0))
         {
             Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Clock.markEvent("fingerMoved_" + pos.x + "_" + pos.y);
             m_finger.transform.position = pos;
         }
 
@@ -346,6 +362,8 @@ public class Grid : MonoBehaviour, ICustomEvents
             {
                 m_hintID = Random.Range(0, m_movableFlowers.Count);
             }
+            Vector2 pos = m_current[m_movableFlowers[m_hintID]].GetComponent<TargetJoint2D>().anchor;
+            Clock.markEvent("hint_" + m_current[m_movableFlowers[m_hintID]].name + "_" + pos.x + "_" + pos.y);
             StartCoroutine(m_current[m_movableFlowers[m_hintID]].GetComponent<jiggle>().SelectAction());
             m_flashTime += m_clueDelay;
         }
@@ -359,6 +377,8 @@ public class Grid : MonoBehaviour, ICustomEvents
         //Object clone = Instantiate(m_flowers[0], pos, Quaternion.identity);
         ((GameObject)clone).GetComponent<Gem>().MoveTo(pos);
         m_current.Add((GameObject)clone);
+
+        Clock.markEvent("newFlower_" + ((GameObject)clone).name + "_" + pos.x + "_" + pos.y);
     }
 
     private void setupBoard()

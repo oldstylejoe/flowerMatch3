@@ -17,9 +17,9 @@ public class FlowerDrawer : MonoBehaviour {
     void Awake()
     {
         lineRenderer = gameObject.AddComponent<LineRenderer>();
-        lineRenderer.material = new Material(Shader.Find("Particles/Additive"));
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         lineRenderer.useWorldSpace = false;
-        lineRenderer.SetWidth(0.06F, 0.06F);
+        lineRenderer.SetWidth(0.06F, 0.1F);
         lineRenderer.SetVertexCount(lengthOfLineRenderer);
     }
 
@@ -35,7 +35,7 @@ public class FlowerDrawer : MonoBehaviour {
         for (int i = 0; i < lengthOfLineRenderer; ++i)
         {
             float t = n*2.0f * Mathf.PI * i / (lengthOfLineRenderer - 1.0f);
-            Vector3 pos = new Vector3(Mathf.Cos(k_over_n * t) * Mathf.Sin(t), Mathf.Cos(k_over_n * t) * Mathf.Cos(t), 0);
+            Vector3 pos = new Vector3(Mathf.Cos(k_over_n * t) * Mathf.Sin(t), Mathf.Pow(Mathf.Cos(k_over_n * t) * Mathf.Cos(t), 2), 0);
             lineRenderer.SetPosition(i, pos);
         }
 

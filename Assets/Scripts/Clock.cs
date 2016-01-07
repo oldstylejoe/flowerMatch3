@@ -15,4 +15,12 @@ public class Clock : MonoBehaviour {
         file.Close();
     }
 
+    //automate the time stamping. Slight loss of precision is possible (but unlikely).
+    public static void markEvent(string str)
+    {
+        long fTest;
+        GetSystemTimePreciseAsFileTime(out fTest);
+        write(str + " " + fTest);
+    }
+
 }

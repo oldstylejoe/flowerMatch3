@@ -11,12 +11,12 @@ public class jiggle : MonoBehaviour {
     {
         float t = Time.time;
         Vector3 axis = new Vector3(0f, 0f, 1f);
-        while (Time.time < t + 0.5f * selectTime)
+        while (Time.time < t + 0.5f * selectTime && transform != null)
         {
             transform.RotateAround(gameObject.transform.position, axis, selectRotateSpeed);
             yield return new WaitForEndOfFrame();
         }
-        while (Time.time < t + selectTime)
+        while (Time.time < t + selectTime && transform != null)
         {
             transform.RotateAround(gameObject.transform.position, axis, -selectRotateSpeed);
             yield return new WaitForEndOfFrame();
@@ -31,7 +31,7 @@ public class jiggle : MonoBehaviour {
     public IEnumerator DestroyAction()
     {
         float t = Time.time;
-        while(Time.time < t + destroyTime)
+        while(Time.time < t + destroyTime && transform != null)
         {
             transform.localScale = destroyScale * transform.localScale;
             yield return new WaitForEndOfFrame();

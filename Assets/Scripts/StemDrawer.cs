@@ -9,9 +9,9 @@ public class StemDrawer : MonoBehaviour {
     void Awake()
     {
         lineRenderer = gameObject.AddComponent<LineRenderer>();
-        lineRenderer.material = new Material(Shader.Find("Particles/Additive"));
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         lineRenderer.useWorldSpace = false;
-        lineRenderer.SetWidth(0.1F, 0.04F);
+        lineRenderer.SetWidth(0.3F, 0.1F);
         lineRenderer.SetVertexCount(2);
     }
 

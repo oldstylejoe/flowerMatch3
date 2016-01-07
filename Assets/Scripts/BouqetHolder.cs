@@ -15,18 +15,18 @@ public class BouqetHolder : MonoBehaviour {
     private List<Vector3> m_pos = new List<Vector3>();
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
         transform.SetParent(vase.transform);
         transform.localPosition = new Vector3(0, 3, 0);
 
         //hacked in for now
         m_pos.Add(new Vector3(0f, 0f));
-        m_pos.Add(new Vector3(-2f, -0.4f));
-        m_pos.Add(new Vector3(2f, -0.4f));
-        m_pos.Add(new Vector3(-1f, 2f));
-        m_pos.Add(new Vector3(1f, 2f));
-        m_pos.Add(new Vector3(-1.8f, 1.3f));
-        m_pos.Add(new Vector3(1.8f, 1.3f));
+        m_pos.Add(new Vector3(-1.8f, -0.5f));
+        m_pos.Add(new Vector3(1.8f, -0.5f));
+        m_pos.Add(new Vector3(-0.9f, 1.7f));
+        m_pos.Add(new Vector3(0.4f, 1.8f));
+        m_pos.Add(new Vector3(-1.6f, 1.1f));
+        m_pos.Add(new Vector3(1.6f, 1.3f));
     }
 
     public void AddFlower(Color col)
@@ -40,7 +40,7 @@ public class BouqetHolder : MonoBehaviour {
         var clone2 = Instantiate(m_stems, Vector3.zero, Quaternion.identity);
         ((GameObject)clone2).transform.SetParent(gameObject.transform);
         ((GameObject)clone2).transform.localPosition = new Vector3(0,0,10);
-        ((GameObject)clone2).GetComponent<StemDrawer>().SetColor(Color.green);
+        ((GameObject)clone2).GetComponent<StemDrawer>().SetColor(new Color(0.1f, 0.8f, 0.1f));
         ((GameObject)clone2).GetComponent<StemDrawer>().SetEnds(new Vector3(0,-3,0), m_pos[m_flowerHeads.Count]);
 
         m_flowerHeads.Add((GameObject)clone);
