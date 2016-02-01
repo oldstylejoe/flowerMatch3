@@ -39,9 +39,9 @@ public class Gem : MonoBehaviour, IDropEvent {
         string name = GetComponent<SpriteRenderer>().sprite.ToString();
         if (!hashFlowers.ContainsKey(name))
         {
-            hashFlowers[name] = hashFlowers.Count;
+            hashFlowers[name] = m_type;// hashFlowers.Count;
         }
-        m_type = hashFlowers[name];
+        //m_type = hashFlowers[name];
         //GoToAssigned();
     }
 
