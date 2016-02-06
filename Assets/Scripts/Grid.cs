@@ -183,7 +183,6 @@ public class Grid : MonoBehaviour, ICustomEvents
 
     public void DropStarted()
     {
-        //m_gameOver.GameOver();  //testing only
         m_grabEnabled = false;
     }
     public void DropComplete()

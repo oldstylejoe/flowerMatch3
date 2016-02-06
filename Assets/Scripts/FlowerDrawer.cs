@@ -3,7 +3,7 @@ using System.Collections;
 
 public class FlowerDrawer : MonoBehaviour {
 
-    public int lengthOfLineRenderer = 100;
+    public int lengthOfLineRenderer = 197;
 
 
     public float k = 1.0f;

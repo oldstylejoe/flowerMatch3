@@ -121,8 +121,9 @@ public class Gem : MonoBehaviour, IDropEvent {
         if (!grabbed) { return; }
         if (other.gameObject.GetComponent<Gem>() == null) { return; }
 
-        trialPos = other.GetComponent<Gem>().assignedPos;
-        if( ((trialPos - assignedPos).sqrMagnitude - 1.0f) > 0.1 ) { return; }
+        Vector2 t = other.GetComponent<Gem>().assignedPos;
+        if( ((t - assignedPos).sqrMagnitude - 1.0f) > 0.1 ) { return; }
+        trialPos = t;
 
         if(!ValidMove()) {
             UndoMove();
