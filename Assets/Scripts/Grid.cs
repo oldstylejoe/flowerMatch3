@@ -215,6 +215,11 @@ public class Grid : MonoBehaviour, ICustomEvents
         SceneManager.LoadScene("playScene2");
     }
 
+    public void QuitButton()
+    {
+        Application.Quit();
+    }
+
     private bool m_destroyingTriples = false;
     private IEnumerator DestroyTriples()
     {
